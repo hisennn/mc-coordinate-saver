@@ -12,8 +12,8 @@ body {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 4%;
-  height: 96vh;
+  letter-spacing: 0.04em;
+  min-height: 100vh;
   gap: 30px;
   display: flex;
   flex-direction: column;
@@ -97,7 +97,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   margin-bottom: 15px;
 }
 
-.color-row label {
+.color-label {
   font-size: 1rem;
   color: #333;
 }
@@ -110,6 +110,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 .color-option {
   width: 25px;
   height: 25px;
+  padding: 0;
   border: 2px solid #888;
   cursor: pointer;
 }

@@ -2,68 +2,82 @@ let coords = [];
 let selectedColor = '#2196F3';
 let editingId = null;
 
+const STORAGE_KEY = 'minecraftCoords';
+const ALLOWED_COLORS = new Set(['#2196F3', '#4CAF50', '#F44336', '#FF9800', '#570fa8', '#f377bf']);
+const coordinateForm = document.getElementById('coordinateForm');
 const nameInput = document.getElementById('nameInput');
 const xInput = document.getElementById('xInput');
 const yInput = document.getElementById('yInput');
 const zInput = document.getElementById('zInput');
-const addBtn = document.getElementById('addBtn');
 const coordsList = document.getElementById('coordsList');
 const colorOptions = document.querySelectorAll('.color-option');
 
 function loadFromStorage() {
-    const saved = localStorage.getItem('minecraftCoords');
-    if (saved) {
-        coords = JSON.parse(saved);
-        renderList();
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+            coords = parsed.filter(isStoredCoordValid);
+        }
+    } catch {
+        coords = [];
     }
 }
 
 function saveToStorage() {
-    localStorage.setItem('minecraftCoords', JSON.stringify(coords));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(coords));
+}
+
+function isStoredCoordValid(coord) {
+    return coord
+        && Number.isFinite(coord.id)
+        && typeof coord.name === 'string'
+        && coord.name.length <= 30
+        && Number.isInteger(coord.x)
+        && coord.x >= -30000000
+        && coord.x <= 30000000
+        && (coord.y === null || (Number.isInteger(coord.y) && coord.y >= -64 && coord.y <= 320))
+        && Number.isInteger(coord.z)
+        && coord.z >= -30000000
+        && coord.z <= 30000000
+        && ALLOWED_COLORS.has(coord.color);
+}
+
+function escapeHtml(value) {
+    return value.replace(/[&<>'"]/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    })[character]);
 }
 
 function generateId() {
     return Date.now() + Math.random();
 }
 
-nameInput.addEventListener('input', (e) => {
-    if (e.target.value.length > 30) {
-        e.target.value = e.target.value.slice(0, 30);
-    }
-});
-
-function limitNumber(input, min, max) {
-    input.addEventListener('input', (e) => {
-        let value = parseInt(e.target.value);
-        if (value > max) {
-            e.target.value = max;
-        } else if (value < min) {
-            e.target.value = min;
-        }
-    });
-}
-
-limitNumber(xInput, -30000000, 30000000);
-limitNumber(yInput, -64, 320);
-limitNumber(zInput, -30000000, 30000000);
-
 function addCoord() {
+    if (!coordinateForm.reportValidity()) return;
+
     const name = nameInput.value.trim();
     const x = xInput.value.trim();
     const y = yInput.value.trim();
     const z = zInput.value.trim();
 
-    if (!name || !x || !z) {
+    if (!name) {
         alert('Name, X and Z are needed!');
         return;
     }
 
     const newCoord = {
         id: generateId(),
-        name: name,
-        x: parseInt(x),
-        y: y ? parseInt(y) : null,
-        z: parseInt(z),
+        name,
+        x: Number(x),
+        y: y ? Number(y) : null,
+        z: Number(z),
         color: selectedColor
     };
 
@@ -105,6 +119,8 @@ function saveEdit(id) {
     const yInput = item.querySelector('.edit-y');
     const zInput = item.querySelector('.edit-z');
 
+    if (![nameInput, xInput, yInput, zInput].every(input => input.reportValidity())) return;
+
     const name = nameInput.value.trim();
     const x = xInput.value.trim();
     const z = zInput.value.trim();
@@ -118,9 +134,9 @@ function saveEdit(id) {
     const coordIndex = coords.findIndex(coord => coord.id === id);
     if (coordIndex !== -1) {
         coords[coordIndex].name = name;
-        coords[coordIndex].x = parseInt(x);
-        coords[coordIndex].y = y ? parseInt(y) : null;
-        coords[coordIndex].z = parseInt(z);
+        coords[coordIndex].x = Number(x);
+        coords[coordIndex].y = y ? Number(y) : null;
+        coords[coordIndex].z = Number(z);
     }
 
     editingId = null;
@@ -128,7 +144,7 @@ function saveEdit(id) {
     renderList();
 }
 
-async function copyToClipboard(coord) {
+async function copyToClipboard(coord, button) {
     if (coord.y === null) return;
 
     const tpCommand = `/tp ${coord.x} ${coord.y} ${coord.z}`;
@@ -136,8 +152,6 @@ async function copyToClipboard(coord) {
     try {
         await navigator.clipboard.writeText(tpCommand);
         
-        // Visual feedback
-        const button = document.querySelector(`[data-coord-id="${coord.id}"] .copy-btn`);
         const originalText = button.textContent;
         button.textContent = 'COPIED!';
         button.classList.add('copied');
@@ -147,8 +161,7 @@ async function copyToClipboard(coord) {
             button.classList.remove('copied');
         }, 1500);
         
-    } catch (err) {
-        // Fallback for older browsers
+    } catch {
         const textArea = document.createElement('textarea');
         textArea.value = tpCommand;
         document.body.appendChild(textArea);
@@ -169,25 +182,26 @@ function renderList() {
     coordsList.innerHTML = coords.map(coord => {
         const isEditing = editingId === coord.id;
         const hasY = coord.y !== null;
+        const safeName = escapeHtml(coord.name);
         
         if (isEditing) {
             return `
                 <div class="coord-item edit-mode" data-id="${coord.id}" style="border-left-color: ${coord.color}">
                     <div class="coord-name-section">
-                        <input type="text" class="edit-name" value="${coord.name}">
+                        <input type="text" class="edit-name" value="${safeName}" maxlength="30" required>
                     </div>
                     <div class="coord-value">
-                        <input type="number" class="edit-x" value="${coord.x}">
+                        <input type="number" class="edit-x" value="${coord.x}" min="-30000000" max="30000000" step="1" required>
                     </div>
                     <div class="coord-value">
-                        <input type="number" class="edit-y" value="${coord.y || ''}">
+                        <input type="number" class="edit-y" value="${coord.y ?? ''}" min="-64" max="320" step="1">
                     </div>
                     <div class="coord-value">
-                        <input type="number" class="edit-z" value="${coord.z}">
+                        <input type="number" class="edit-z" value="${coord.z}" min="-30000000" max="30000000" step="1" required>
                     </div>
                     <div class="coord-actions">
-                        <button class="save-btn" onclick="saveEdit(${coord.id})">SAVE</button>
-                        <button class="cancel-btn" onclick="cancelEdit()">CANCEL</button>
+                        <button class="save-btn" data-action="save" data-id="${coord.id}">SAVE</button>
+                        <button class="cancel-btn" data-action="cancel">CANCEL</button>
                     </div>
                 </div>
             `;
@@ -196,19 +210,17 @@ function renderList() {
         return `
             <div class="coord-item" data-id="${coord.id}" data-coord-id="${coord.id}" style="border-left-color: ${coord.color}">
                 <div class="coord-name-section">
-                    <div class="coord-name">${coord.name}</div>
-                    <button class="copy-btn" 
-                            onclick="copyToClipboard({id: ${coord.id}, x: ${coord.x}, y: ${coord.y}, z: ${coord.z}})"
-                            ${!hasY ? 'disabled' : ''}>
-                        ${hasY ? 'COPY /tp' : 'COPY /tp'}
+                    <div class="coord-name">${safeName}</div>
+                    <button class="copy-btn" data-action="copy" data-id="${coord.id}" ${!hasY ? 'disabled' : ''}>
+                        COPY /tp
                     </button>
                 </div>
                 <div class="coord-value">${coord.x}</div>
                 <div class="coord-value ${coord.y === null ? 'empty' : ''}">${coord.y !== null ? coord.y : '---'}</div>
                 <div class="coord-value">${coord.z}</div>
                 <div class="coord-actions">
-                    <button class="edit-btn" onclick="startEdit(${coord.id})">EDIT</button>
-                    <button class="delete-btn" onclick="deleteCoord(${coord.id})">REMOVE</button>
+                    <button class="edit-btn" data-action="edit" data-id="${coord.id}">EDIT</button>
+                    <button class="delete-btn" data-action="delete" data-id="${coord.id}">REMOVE</button>
                 </div>
             </div>
         `;
@@ -217,18 +229,46 @@ function renderList() {
 
 colorOptions.forEach(option => {
     option.addEventListener('click', () => {
-        colorOptions.forEach(opt => opt.classList.remove('active'));
+        colorOptions.forEach(opt => {
+            opt.classList.remove('active');
+            opt.setAttribute('aria-pressed', 'false');
+        });
         option.classList.add('active');
+        option.setAttribute('aria-pressed', 'true');
         selectedColor = option.dataset.color;
     });
 });
 
-addBtn.addEventListener('click', addCoord);
+coordinateForm.addEventListener('submit', event => {
+    event.preventDefault();
+    addCoord();
+});
 
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !editingId) {
-        addCoord();
+coordsList.addEventListener('click', event => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+
+    const id = Number(button.dataset.id);
+    switch (button.dataset.action) {
+        case 'save':
+            saveEdit(id);
+            break;
+        case 'cancel':
+            cancelEdit();
+            break;
+        case 'copy': {
+            const coord = coords.find(item => item.id === id);
+            if (coord) copyToClipboard(coord, button);
+            break;
+        }
+        case 'edit':
+            startEdit(id);
+            break;
+        case 'delete':
+            deleteCoord(id);
+            break;
     }
 });
 
 loadFromStorage();
+renderList();

@@ -4,46 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Coordinate Saver for Minecraft</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml?v=1.2">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml?v=1.2">
   <meta name="description" content="A simple web app to save and manage your Minecraft coordinates. Not an official Minecraft product.">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <div class="container">
     <h1 class="site-title">Coordinate Saver</h1>
-    <div class="add-section">
+    <form id="coordinateForm" class="add-section">
       <div class="input-row">
         <div class="input-group">
           <label for="nameInput">Name:</label>
-          <input type="text" id="nameInput" placeholder="Coordinate Name">
+          <input type="text" id="nameInput" placeholder="Coordinate Name" maxlength="30" required>
         </div>
         <div class="input-group">
           <label for="xInput">X:</label>
-          <input type="number" id="xInput" placeholder="0">
+          <input type="number" id="xInput" placeholder="0" min="-30000000" max="30000000" step="1" required>
         </div>
         <div class="input-group">
           <label for="yInput">Y:<span class="opt-label">(optional)</span></label>
-          <input type="number" id="yInput" placeholder="64">
+          <input type="number" id="yInput" placeholder="64" min="-64" max="320" step="1">
         </div>
         <div class="input-group">
           <label for="zInput">Z:</label>
-          <input type="number" id="zInput" placeholder="0">
+          <input type="number" id="zInput" placeholder="0" min="-30000000" max="30000000" step="1" required>
         </div>
       </div>
       <div class="color-row">
-        <label>Accent Color:</label>
+        <span class="color-label">Accent Color:</span>
         <div class="color-options">
-          <div class="color-option active" data-color="#2196F3" style="background-color: #2196F3;"></div>
-          <div class="color-option" data-color="#4CAF50" style="background-color: #4CAF50;"></div>
-          <div class="color-option" data-color="#F44336" style="background-color: #F44336;"></div>
-          <div class="color-option" data-color="#FF9800" style="background-color: #FF9800;"></div>
-          <div class="color-option" data-color="#570fa8" style="background-color: #570fa8;"></div>
-          <div class="color-option" data-color="#f377bf" style="background-color: #f377bf;"></div>
+          <button type="button" class="color-option active" data-color="#2196F3" style="background-color: #2196F3;" aria-label="Blue" aria-pressed="true"></button>
+          <button type="button" class="color-option" data-color="#4CAF50" style="background-color: #4CAF50;" aria-label="Green" aria-pressed="false"></button>
+          <button type="button" class="color-option" data-color="#F44336" style="background-color: #F44336;" aria-label="Red" aria-pressed="false"></button>
+          <button type="button" class="color-option" data-color="#FF9800" style="background-color: #FF9800;" aria-label="Orange" aria-pressed="false"></button>
+          <button type="button" class="color-option" data-color="#570fa8" style="background-color: #570fa8;" aria-label="Purple" aria-pressed="false"></button>
+          <button type="button" class="color-option" data-color="#f377bf" style="background-color: #f377bf;" aria-label="Pink" aria-pressed="false"></button>
         </div>
       </div>
       <p class="req-text">Enter y coordinate to use /tp copy</p>
-      <button id="addBtn" class="add-btn">Add</button>
-    </div>
+      <button class="add-btn" type="submit">Add</button>
+    </form>
     <div class="list-section">
         <div class="list-header">
           <div class="header-name">NAME</div>
@@ -57,8 +57,8 @@
   </div>
   <footer class="footer-content">
     <p>Your data is stored locally in your browser. If you clear your site data or cache, it will be lost.<br>NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</p>
-    <span>Made by a Minecraft lover ♡ <a href="https://github.com/Hisennn" target="_blank">Gabriel</a></span>
+    <span>Made by a Minecraft lover ♡ <a href="https://github.com/Hisennn" target="_blank" rel="noopener noreferrer">Gabriel</a></span>
   </footer>
-  <script src="/script.js"></script>
+  <script src="./script.js"></script>
 </body>
 </html>
